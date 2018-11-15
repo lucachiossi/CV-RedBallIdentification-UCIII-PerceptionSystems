@@ -7,29 +7,30 @@ using namespace std;
 int main(int argc, char* argv[]) {
 	cout << "inizio programma" << endl;
 
-	// declaration matrix
-	// dichiarazione matrice
-	Mat img;
+	// declaration image container
+	Mat img17;
 
 	// read image
-	// lettura immagine
-	img = imread("C:/Users/lucac_000/Desktop/Luca/UNIVERSITA/__MAGISTRALE__/_II_anno/M1_Sistemas_de_Percepcion/_Laboratory/Lab1/mandril.jpg");
+	img17 = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/redball17.jpg");
 
 	// check reading result
-	// controllo esito lettura
-	if (!img.data) {
+	if (!img17.data) {
 		cout << "errore lettura immagine mandril.jpg" << endl;
 		getchar();
 		return -1;
 	}
 
-	// create a window to show the image
-	// creazione finestra per mostrare la immagine
-	namedWindow("original", CV_WINDOW_AUTOSIZE);
+	// recognition of red objects
+
+
+	// recognition of ball shape objects
+
+
+	// creation of a window to show the image
+	namedWindow("image17", CV_WINDOW_AUTOSIZE);
 
 	// show image in the window
-	// mostrare immagine nella finestra creata
-	imshow("original", img);
+	imshow("image17", img17);
 	waitKey(0);
 	destroyWindow("original");
 
