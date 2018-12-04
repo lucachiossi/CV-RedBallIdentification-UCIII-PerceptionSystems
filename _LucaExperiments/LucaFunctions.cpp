@@ -1,4 +1,7 @@
 #include "opencv\cv.hpp"
+#include <iostream>
+
+using namespace std;
 using namespace cv;
 
 // PRE-FILTERING
@@ -14,6 +17,18 @@ Output: an image as Mat format
 */
 
 Mat red_color_filtering(Mat input_image) {
-	// convert from RGB to HSV
+	
+	Mat output_image;
 
+	// convert from RGB to HSV
+	cvtColor(input_image, output_image, COLOR_BGR2HSV);
+	cout << "numero canali immagine HSV: " << output_image.channels();
+
+	// range of red colors
+	/*int lower_red = (110, 50, 50);
+	int upper_red = (130, 255, 255);
+
+	mask = inRange(output_image, lower_red, upper_red, output_image);*/
+
+	return output_image;
 }
