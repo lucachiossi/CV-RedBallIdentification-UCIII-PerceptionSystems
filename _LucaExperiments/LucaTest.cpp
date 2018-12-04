@@ -41,30 +41,29 @@ Mat image_pre_filtering(Mat input_image) {
 	Mat output_image;
 
 	// reduce dimension
+	cout << "resizing image.." << endl;
 	Size size(500, 500);
 	resize(input_image, output_image, size);//resize image
 	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
 	imshow("cropped_img", output_image);
 
 	// noise reduction
-	Mat noise_reducted;
 //	blur(output_image, output_image, Size(3,3));
 //	medianBlur(output_image, output_image, 3);
 
 	int sigma_x = 0;
 	int sigma_y = 0;
-	GaussianBlur(output_image, noise_reducted, Size(3, 3), sigma_x, sigma_y);
+	GaussianBlur(output_image, output_image, Size(3, 3), sigma_x, sigma_y);
 	namedWindow("noise_reducted", CV_WINDOW_AUTOSIZE);
-	imshow("noise_reducted", noise_reducted);
+	imshow("noise_reducted", output_image);
 
 	// segmentation - application of meanshift algorithm
-	Mat segmentation_applied;
+	/*cout << "mean shift segmentation.." << endl;
 
-	segmentation_applied = mean_shift_segmentation_application(noise_reducted);
+	output_image = mean_shift_segmentation_application(output_image);
 	namedWindow("mean shift segmentation");
-	imshow("mean shift segmentation", segmentation_applied);
+	imshow("mean shift segmentation", output_image);*/
 
-	output_image = segmentation_applied;
 	return output_image;
 }
 
@@ -80,6 +79,8 @@ Mat red_color_filtering(Mat input_image) {
 //	cout << "numero canali immagine HSV: " << output_image.channels();
 
 	// range of red colors
+	cout << "colour range operation.." << endl;
+
 	// mask1
 	Mat mask1;
 	Scalar lower_red_hue_range1 = Scalar(0, 100, 100);
@@ -139,13 +140,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	// PRE-FILTERING
+	cout << "pre filtering..." << endl;
 	filtering_result = image_pre_filtering(img);
 
 	// RECOGNITION OF RED OBJECTS
+	cout << "red objects detection..." << endl;
 	color_result = red_color_filtering(filtering_result);
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
-
+	cout << "circle object recognition..." << endl;
 
 	// creation of windows to show the images
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
