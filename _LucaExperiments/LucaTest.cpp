@@ -25,12 +25,41 @@ Mat mean_shift_segmentation_application(Mat input_image) {
 	MSProc.MSSegmentation(output_image);
 	
 	// Print the bandwith
-	cout<<"the Spatial Bandwith is "<<MSProc.hs<<endl;
-	cout<<"the Color Bandwith is "<<MSProc.hr<<endl;
+	cout << "the Spatial Bandwith is " << MSProc.hs << endl;
+	cout << "the Color Bandwith is " << MSProc.hr << endl;
 
 	// Convert color from Lab to RGB
 	cvtColor(output_image, output_image, CV_Lab2BGR);
 	cvtColor(output_image, output_image, CV_BGR2HSV);
+
+	return output_image;
+}
+
+// this function takes an image as inputs and apply some morphological transformations
+// in this specific case we work with dilation and erosion
+Mat mophological_transformation_application(Mat input_image) {
+	Mat output_image = input_image;
+	Mat kernel;
+
+	// Create kernel of size 3x3. Try different sizes
+	kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
+	//kernel = getStructuringElement(MORPH_CROSS, Size(10, 10));
+	//kernel = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
+	cout << kernel << endl;
+
+	// Dilate
+	dilate(src_img, dilate_img, kernel);
+
+	// Erode
+	erode(src_img, erode_img, kernel);
+
+	// Morphologic transformation: could be:
+	// - MORPH_OPEN 
+	// - MORPH_CLOSE
+	// - MORPH_GRADIENT
+	// - MORPH_TOPHAT
+	// - MORPH_BLACKHAT
+	morphologyEx(src_img, morph_img, MORPH_CLOSE, kernel);
 
 	return output_image;
 }
@@ -41,7 +70,7 @@ Mat image_pre_filtering(Mat input_image) {
 	Mat output_image;
 
 	// reduce dimension
-	cout << "resizing image.." << endl;
+	cout << "-> resizing image" << endl;
 	Size size(500, 500);
 	resize(input_image, output_image, size);//resize image
 	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
@@ -58,7 +87,7 @@ Mat image_pre_filtering(Mat input_image) {
 	imshow("noise_reducted", output_image);
 
 	// segmentation - application of meanshift algorithm
-	/*cout << "mean shift segmentation.." << endl;
+	/*cout << "-> mean shift segmentation" << endl;
 
 	output_image = mean_shift_segmentation_application(output_image);
 	namedWindow("mean shift segmentation");
@@ -79,7 +108,7 @@ Mat red_color_filtering(Mat input_image) {
 //	cout << "numero canali immagine HSV: " << output_image.channels();
 
 	// range of red colors
-	cout << "colour range operation.." << endl;
+	cout << "-> colour range operation" << endl;
 
 	// mask1
 	Mat mask1;
@@ -111,8 +140,13 @@ Mat red_color_filtering(Mat input_image) {
 Mat image_circle_recognition(Mat input_image) {
 	Mat output_image;
 
+	// application of morphological transformation
 	// chiusura - apertura
+	cout << "-> application of erosion and dilation" << endl;
 
+	output_image = mophological_transformation_application(input_image);
+	namedWindow("morphological transformation");
+	imshow("morphological transformation", output_image);
 
 	// label objects
 
