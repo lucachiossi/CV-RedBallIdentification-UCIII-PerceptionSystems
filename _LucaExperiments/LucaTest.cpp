@@ -70,10 +70,47 @@ Mat mophological_transformation_application(Mat input_image) {
 	return output_image;
 }
 
-Mat object_labelling(Mat input_image) {
+Mat object_detecting_labelling(Mat input_image) {
 	Mat output_image = input_image;
 
+	// Find all closed shapes in the binary image.
+	cout << "-> finding contours" << endl;
 
+	vector<vector<Point> > contours;
+	findContours(output_image, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	cout << "Number of countours " << contours.size() << endl;
+//	cout << "contorno: " << contours[0];
+
+	// Draw contours
+	/*Mat img_contours(output_image.size(), CV_8UC3, Scalar(0, 0, 0));
+	for (size_t k = 0; k < contours.size(); k++){
+		Scalar color(rand() & 255, rand() & 255, rand() & 255);
+		drawContours(img_contours, contours, k, color);
+	}
+	output_image = img_contours;
+
+	namedWindow("img_contours", CV_WINDOW_AUTOSIZE);
+	imshow("img_contours", output_image);*/
+
+	// Labelling objects
+	cout << "-> labelling objects" << endl;
+
+	int number_of_labels;
+	Mat labels, stats, centroids;
+	int connectivity = 8;
+
+	number_of_labels = connectedComponentsWithStats(output_image, labels, stats, centroids, connectivity);
+	output_image = labels;
+
+	cout << "number_of_labels: " << number_of_labels << endl;
+	cout << "stats:" << endl << stats << endl;
+	cout << "centroids:" << endl << centroids << endl;
+	// cout << "etichetta1: " << output_image.at<double>((int)centroids.at<double>(Point(0, 0)), (int)centroids.at<double>(Point(0, 1))) << endl;
+	//	cout << "value label centroid: " << labels.at<uchar>((int)centroids.at<uchar>(0, 0), (int)centroids.at<uchar>(0, 1));
+
+	// Detecting circumference
+
+	// Detecting circle
 
 	return output_image;
 }
@@ -143,8 +180,8 @@ Mat red_color_filtering(Mat input_image) {
 	// combined mask - because redvalues in HSV space are in 2 different ranges
 	Mat combined_mask;
 	addWeighted(mask1, 1.0, mask2, 1.0, 0.0, combined_mask);
-	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
-	imshow("combined_mask", combined_mask);
+//	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
+//	imshow("combined_mask", combined_mask);
 
 	output_image = combined_mask;
 	return output_image;
@@ -152,25 +189,22 @@ Mat red_color_filtering(Mat input_image) {
 
 // this function take as input an image and recognise circles inside it
 Mat image_circle_recognition(Mat input_image) {
-	Mat output_image;
+	Mat output_image = input_image;
 
 	// application of morphological transformation
 	// chiusura - apertura
 	cout << "-> application of erosion and dilation" << endl;
 
-	output_image = mophological_transformation_application(input_image);
+	output_image = mophological_transformation_application(output_image);
 	namedWindow("morphological transformation");
 	imshow("morphological transformation", output_image);
 
-	// label objects
+	// objects detectios and labelling
 	cout << "-> labelling objects" << endl;
 
-	output_image = object_labelling(output_image);
+	output_image = object_detecting_labelling(output_image);
 	namedWindow("object labelling");
 	imshow("object labelling", output_image);
-
-	// correlation with sign of a circle
-
 
 	return output_image;
 }
@@ -193,15 +227,15 @@ int main(int argc, char* argv[]) {
 
 	// PRE-FILTERING
 	cout << "pre filtering..." << endl;
-	filtering_result = image_pre_filtering(img);
+	filtering_result = image_pre_filtering(img.clone());
 
 	// RECOGNITION OF RED OBJECTS
 	cout << "red objects detection..." << endl;
-	color_result = red_color_filtering(filtering_result);
+	color_result = red_color_filtering(filtering_result.clone());
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
 	cout << "circle object recognition..." << endl;
-	shape_result = image_circle_recognition(color_result);
+	shape_result = image_circle_recognition(color_result.clone());
 
 	// creation of windows to show the images
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
