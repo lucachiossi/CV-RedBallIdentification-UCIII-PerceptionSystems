@@ -42,23 +42,38 @@ Mat mophological_transformation_application(Mat input_image) {
 	Mat kernel;
 
 	// Create kernel of size 3x3. Try different sizes
-	kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
+	kernel = getStructuringElement(MORPH_RECT, Size(5, 5));
 	// kernel = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
 	cout << kernel << endl;
 
-	// Dilate
-//	dilate(output_image, output_image, kernel);
+	// Morphologic transformations
+	// in order to completely delete noises we should apply many times erosion and dilation
+	
+	// deleting noise outside
+	int noise_outside_reduction_iteration = 3;
+	for (int i = 0; i < noise_outside_reduction_iteration; i++) {
+		erode(output_image, output_image, kernel);
+	}
+	for (int i = 0; i < noise_outside_reduction_iteration; i++) {
+		dilate(output_image, output_image, kernel);
+	}
 
-	// Erode
-//	erode(output_image, output_image, kernel);
+	// deleting noise inside
+	int noise_inside_reduction_iteration = 5;
+	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
+		dilate(output_image, output_image, kernel);
+	}
+	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
+		erode(output_image, output_image, kernel);
+	}
 
-	// Morphologic transformation: could be:
-	// - MORPH_OPEN 
-	// - MORPH_CLOSE
-	// - MORPH_GRADIENT
-	// - MORPH_TOPHAT
-	// - MORPH_BLACKHAT
-	morphologyEx(output_image, output_image, MORPH_CLOSE, kernel);
+	return output_image;
+}
+
+Mat object_labelling(Mat input_image) {
+	Mat output_image = input_image;
+
+
 
 	return output_image;
 }
@@ -66,12 +81,12 @@ Mat mophological_transformation_application(Mat input_image) {
 // take an image and apply some filters in order to have better processing results
 // both input and output images are in BGR colour space
 Mat image_pre_filtering(Mat input_image) {
-	Mat output_image;
+	Mat output_image = input_image;
 
 	// reduce dimension
 	cout << "-> resizing image" << endl;
-	Size size(500, 500);
-	resize(input_image, output_image, size);//resize image
+	Size size(1000, 750);
+	resize(output_image, output_image, size);//resize image
 	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
 	imshow("cropped_img", output_image);
 
@@ -148,7 +163,11 @@ Mat image_circle_recognition(Mat input_image) {
 	imshow("morphological transformation", output_image);
 
 	// label objects
+	cout << "-> labelling objects" << endl;
 
+	output_image = object_labelling(output_image);
+	namedWindow("object labelling");
+	imshow("object labelling", output_image);
 
 	// correlation with sign of a circle
 
@@ -163,7 +182,7 @@ int main(int argc, char* argv[]) {
 	Mat img, filtering_result, color_result, shape_result;
 
 	// read image
-	img = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/redball2.jpg", CV_LOAD_IMAGE_COLOR);
+	img = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset3.jpg", CV_LOAD_IMAGE_COLOR);
 
 	// check reading result
 	if (!img.data) {
@@ -188,11 +207,13 @@ int main(int argc, char* argv[]) {
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
 	namedWindow("filtering_result", CV_WINDOW_AUTOSIZE);
 	namedWindow("color_result", CV_WINDOW_AUTOSIZE);
+	namedWindow("shape_result", CV_WINDOW_AUTOSIZE);
 
 	// show images in the windows
 	imshow("image", img);
 	imshow("filtering_result", filtering_result);
 	imshow("color_result", color_result);
+	imshow("shape_result", color_result);
 	waitKey(0);
 	destroyAllWindows();
 
