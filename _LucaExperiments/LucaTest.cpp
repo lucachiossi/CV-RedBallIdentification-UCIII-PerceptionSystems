@@ -43,15 +43,14 @@ Mat mophological_transformation_application(Mat input_image) {
 
 	// Create kernel of size 3x3. Try different sizes
 	kernel = getStructuringElement(MORPH_RECT, Size(10, 10));
-	//kernel = getStructuringElement(MORPH_CROSS, Size(10, 10));
-	//kernel = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
+	// kernel = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
 	cout << kernel << endl;
 
 	// Dilate
-	dilate(src_img, dilate_img, kernel);
+//	dilate(output_image, output_image, kernel);
 
 	// Erode
-	erode(src_img, erode_img, kernel);
+//	erode(output_image, output_image, kernel);
 
 	// Morphologic transformation: could be:
 	// - MORPH_OPEN 
@@ -59,7 +58,7 @@ Mat mophological_transformation_application(Mat input_image) {
 	// - MORPH_GRADIENT
 	// - MORPH_TOPHAT
 	// - MORPH_BLACKHAT
-	morphologyEx(src_img, morph_img, MORPH_CLOSE, kernel);
+	morphologyEx(output_image, output_image, MORPH_CLOSE, kernel);
 
 	return output_image;
 }
@@ -129,8 +128,8 @@ Mat red_color_filtering(Mat input_image) {
 	// combined mask - because redvalues in HSV space are in 2 different ranges
 	Mat combined_mask;
 	addWeighted(mask1, 1.0, mask2, 1.0, 0.0, combined_mask);
-//	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
-//	imshow("combined_mask", combined_mask);
+	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
+	imshow("combined_mask", combined_mask);
 
 	output_image = combined_mask;
 	return output_image;
@@ -183,6 +182,7 @@ int main(int argc, char* argv[]) {
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
 	cout << "circle object recognition..." << endl;
+	shape_result = image_circle_recognition(color_result);
 
 	// creation of windows to show the images
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
