@@ -81,9 +81,10 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
 	// Signature
 	vector<double> signature;
 	for (int i = 0; i < contour.size(); i++) {
-		double distance = 0;
-		signature.insert(distance);
+		double distance = norm(Mat(centre), Mat(contour[i]));
+		signature.push_back(distance);
 	}
+	cout << "signature: " << signature << endl;
 
 	// DETECTING CIRCLE
 
@@ -119,7 +120,7 @@ Mat object_detecting_labelling(Mat input_image) {
 	for (int i = 1; i <= number_of_labels; i++) {
 		// check shape
 		Point centre = Point((int)centroids.at<double>(i,0), (int)centroids.at<double>(i, 1));
-		vector<Point> contour = contours[i - 1];
+		vector<Point> contour = contours[i-1];
 		if (labels.at<int>(centre) != labels.at<int>(contour[0])) {
 			cout << "ERRORE CENTRO E CONTORNO NON CORRISPONDONO" << endl;
 			exit(-1);
