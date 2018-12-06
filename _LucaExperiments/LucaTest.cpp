@@ -70,27 +70,28 @@ Mat mophological_transformation_application(Mat input_image) {
 	return output_image;
 }
 
+bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
+	bool output_image = false;
+
+	cout << "centre received: " << centre << endl;
+	cout << "stats received: " << stats << endl;
+	cout << "contour received: " << contour << endl;
+
+	// DETECTING CIRCUMFERENCE
+	// Signature
+	vector<double> signature;
+	for (int i = 0; i < contour.size(); i++) {
+		double distance = 0;
+		signature.insert(distance);
+	}
+
+	// DETECTING CIRCLE
+
+	return output_image;
+}
+
 Mat object_detecting_labelling(Mat input_image) {
 	Mat output_image = input_image;
-
-	// Find all closed shapes in the binary image.
-	cout << "-> finding contours" << endl;
-
-	vector<vector<Point> > contours;
-	findContours(output_image, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-	cout << "Number of countours " << contours.size() << endl;
-//	cout << "contorno: " << contours[0];
-
-	// Draw contours
-	/*Mat img_contours(output_image.size(), CV_8UC3, Scalar(0, 0, 0));
-	for (size_t k = 0; k < contours.size(); k++){
-		Scalar color(rand() & 255, rand() & 255, rand() & 255);
-		drawContours(img_contours, contours, k, color);
-	}
-	output_image = img_contours;
-
-	namedWindow("img_contours", CV_WINDOW_AUTOSIZE);
-	imshow("img_contours", output_image);*/
 
 	// Labelling objects
 	cout << "-> labelling objects" << endl;
@@ -100,17 +101,34 @@ Mat object_detecting_labelling(Mat input_image) {
 	int connectivity = 8;
 
 	number_of_labels = connectedComponentsWithStats(output_image, labels, stats, centroids, connectivity);
-	output_image = labels;
 
 	cout << "number_of_labels: " << number_of_labels << endl;
 	cout << "stats:" << endl << stats << endl;
 	cout << "centroids:" << endl << centroids << endl;
-	// cout << "etichetta1: " << output_image.at<double>((int)centroids.at<double>(Point(0, 0)), (int)centroids.at<double>(Point(0, 1))) << endl;
-	//	cout << "value label centroid: " << labels.at<uchar>((int)centroids.at<uchar>(0, 0), (int)centroids.at<uchar>(0, 1));
 
-	// Detecting circumference
+	// Find all closed contours in the binary image.
+	cout << "-> finding contours" << endl;
 
-	// Detecting circle
+	vector<vector<Point>> contours;
+	findContours(output_image, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	cout << "Number of countours " << contours.size() << endl;
+
+	// Find all circles in the image
+	cout << "-> finding circles" << endl;
+
+	for (int i = 1; i <= number_of_labels; i++) {
+		// check shape
+		Point centre = Point((int)centroids.at<double>(i,0), (int)centroids.at<double>(i, 1));
+		vector<Point> contour = contours[i - 1];
+		if (labels.at<int>(centre) != labels.at<int>(contour[0])) {
+			cout << "ERRORE CENTRO E CONTORNO NON CORRISPONDONO" << endl;
+			exit(-1);
+		}
+		if (circle_detection(contour, centre, stats.row(i))) {
+			// bound object
+
+		}
+	}
 
 	return output_image;
 }
