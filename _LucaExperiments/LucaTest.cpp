@@ -73,7 +73,7 @@ Mat mophological_transformation_application(Mat input_image) {
 	return output_image;
 }
 
-bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
+bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_radious) {
 	cout << "centre received: " << centre << endl;
 	cout << "stats received: " << stats << endl;
 	cout << "contour received: " << contour << endl;
@@ -97,6 +97,9 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
 	for (int i = 0; i < contour.size(); i++) {
 		double distance = sqrt(pow((centre.x - contour[i].x), 2) + pow((centre.y - contour[i].y), 2));
 
+		if (distance > *max_radious) {
+			*max_radious = distance;
+		}
 		radious_sum = radious_sum + distance;
 
 		circle_reference.push_back(10);
@@ -143,7 +146,7 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
 	return true;
 }
 
-Mat object_detecting_labelling(Mat input_image) {
+Mat object_detecting_labelling(Mat input_image, Mat to_label_image) {
 	Mat output_image = input_image;
 
 	// Labelling objects
@@ -169,6 +172,8 @@ Mat object_detecting_labelling(Mat input_image) {
 	// Find all circles in the image
 	cout << "-> finding circles" << endl;
 
+	RNG rng;
+
 	for (int i = 1; i < number_of_labels; i++) {
 		// check shape
 		int x_coordinate = (int)centroids.at<double>(i, 0);
@@ -179,13 +184,15 @@ Mat object_detecting_labelling(Mat input_image) {
 			cout << "ERRORE CENTRO E CONTORNO NON CORRISPONDONO" << endl;
 			exit(-1);
 		}
-		if (circle_detection(contour, centre, stats.row(i))) {
+		int radious = 0;
+		if (circle_detection(contour, centre, stats.row(i), &radious)) {
 			// bound object
-
+			Scalar color(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+			circle(to_label_image, centre, radious, color, 2);
 		}
 	}
 
-	return output_image;
+	return to_label_image;
 }
 
 // take an image and apply some filters in order to have better processing results
@@ -263,7 +270,7 @@ Mat red_color_filtering(Mat input_image) {
 }
 
 // this function take as input an image and recognise circles inside it
-Mat image_circle_recognition(Mat input_image) {
+Mat image_circle_recognition(Mat input_image, Mat to_label_image) {
 	Mat output_image = input_image;
 
 	// application of morphological transformation
@@ -277,11 +284,11 @@ Mat image_circle_recognition(Mat input_image) {
 	// objects detectios and labelling
 	cout << "-> labelling objects" << endl;
 
-	output_image = object_detecting_labelling(output_image.clone());
+	output_image = object_detecting_labelling(output_image.clone(), to_label_image);
 	namedWindow("circle recognized");
 	imshow("circle recognized", output_image);
 
-	return output_image;
+	return to_label_image;
 }
 
 int main(int argc, char* argv[]) {
@@ -310,7 +317,7 @@ int main(int argc, char* argv[]) {
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
 	cout << "circle object recognition..." << endl;
-	shape_result = image_circle_recognition(color_result.clone());
+	shape_result = image_circle_recognition(color_result.clone(), filtering_result.clone());
 
 	// creation of windows to show the images
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
