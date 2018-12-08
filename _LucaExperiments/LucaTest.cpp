@@ -44,10 +44,12 @@ Mat mophological_transformation_application(Mat input_image) {
 	// Create kernel of size 3x3. Try different sizes
 	kernel = getStructuringElement(MORPH_RECT, Size(5, 5));
 	// kernel = getStructuringElement(MORPH_ELLIPSE, Size(10, 10));
-	cout << kernel << endl;
+	cout << "kernel fro morphological transformations: " << endl << kernel << endl;
 
 	// Morphologic transformations
 	// in order to completely delete noises we should apply many times erosion and dilation
+	// doing this we are supposing to work in a certain environment where the red ball will
+	// not be farer than a certain distance
 	
 	// deleting noise outside
 	int noise_outside_reduction_iteration = 3;
@@ -71,24 +73,48 @@ Mat mophological_transformation_application(Mat input_image) {
 }
 
 bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
-	bool output_image = false;
+	bool detected = false;
 
 	cout << "centre received: " << centre << endl;
 	cout << "stats received: " << stats << endl;
 	cout << "contour received: " << contour << endl;
 
+	Mat circle_received(1000, 750, CV_8UC3, Scalar(0, 0, 0));
+	Scalar color(rand() & 255, rand() & 255, rand() & 255);
+	vector<vector<Point>> contours;
+	contours.push_back(contour);
+	drawContours(circle_received, contours, 0, color);
+	circle(circle_received, centre, 3, color, -1, 8);
+
+	namedWindow("circle received", CV_WINDOW_AUTOSIZE);
+	imshow("circle received", circle_received);
+
 	// DETECTING CIRCUMFERENCE
 	// Signature
-	vector<double> signature;
+	vector<double> circle_reference;
+	vector<double> object_signature;
 	for (int i = 0; i < contour.size(); i++) {
-		double distance = norm(Mat(centre), Mat(contour[i]));
-		signature.push_back(distance);
+		double distance = sqrt(pow((centre.x - contour[i].x), 2) + pow((centre.y - contour[i].y), 2));
+		circle_reference.push_back(10);
+		object_signature.push_back(distance);
+		cout << "signature: " << object_signature[i] << endl;
 	}
-	cout << "signature: " << signature << endl;
+
+	// Correlation with Circle's signature
+	double circumference_threshold = 10;
+	double correlation = 0;
+
+	if (!(correlation > circumference_threshold)) {
+		return false;
+	}
+
+	// Radius too short -> probably it's a noise object
+
 
 	// DETECTING CIRCLE
+	// Area
 
-	return output_image;
+	return true;
 }
 
 Mat object_detecting_labelling(Mat input_image) {
@@ -112,14 +138,16 @@ Mat object_detecting_labelling(Mat input_image) {
 
 	vector<vector<Point>> contours;
 	findContours(output_image, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-	cout << "Number of countours " << contours.size() << endl;
+	cout << "Number of countours"  << contours.size() << endl;
 
 	// Find all circles in the image
 	cout << "-> finding circles" << endl;
 
-	for (int i = 1; i <= number_of_labels; i++) {
+	for (int i = 1; i < number_of_labels; i++) {
 		// check shape
-		Point centre = Point((int)centroids.at<double>(i,0), (int)centroids.at<double>(i, 1));
+		int x_coordinate = (int)centroids.at<double>(i, 0);
+		int y_coordinate = (int)centroids.at<double>(i, 1);
+		Point centre = Point(x_coordinate, y_coordinate);
 		vector<Point> contour = contours[i-1];
 		if (labels.at<int>(centre) != labels.at<int>(contour[0])) {
 			cout << "ERRORE CENTRO E CONTORNO NON CORRISPONDONO" << endl;
@@ -141,17 +169,19 @@ Mat image_pre_filtering(Mat input_image) {
 
 	// reduce dimension
 	cout << "-> resizing image" << endl;
+
 	Size size(1000, 750);
 	resize(output_image, output_image, size);//resize image
 	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
 	imshow("cropped_img", output_image);
 
 	// noise reduction
+	cout << "-> reducing noise" << endl;
 //	blur(output_image, output_image, Size(3,3));
 //	medianBlur(output_image, output_image, 3);
 
-	int sigma_x = 0;
-	int sigma_y = 0;
+	int sigma_x = 10;
+	int sigma_y = 10;
 	GaussianBlur(output_image, output_image, Size(3, 3), sigma_x, sigma_y);
 	namedWindow("noise_reducted", CV_WINDOW_AUTOSIZE);
 	imshow("noise_reducted", output_image);
@@ -196,7 +226,7 @@ Mat red_color_filtering(Mat input_image) {
 //	namedWindow("mask2", CV_WINDOW_AUTOSIZE);
 //	imshow("mask2", mask1);
 
-	// combined mask - because redvalues in HSV space are in 2 different ranges
+	// combined mask - because red values in HSV space are in 2 different ranges
 	Mat combined_mask;
 	addWeighted(mask1, 1.0, mask2, 1.0, 0.0, combined_mask);
 //	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
@@ -214,16 +244,16 @@ Mat image_circle_recognition(Mat input_image) {
 	// chiusura - apertura
 	cout << "-> application of erosion and dilation" << endl;
 
-	output_image = mophological_transformation_application(output_image);
+	output_image = mophological_transformation_application(output_image.clone());
 	namedWindow("morphological transformation");
 	imshow("morphological transformation", output_image);
 
 	// objects detectios and labelling
 	cout << "-> labelling objects" << endl;
 
-	output_image = object_detecting_labelling(output_image);
-	namedWindow("object labelling");
-	imshow("object labelling", output_image);
+	output_image = object_detecting_labelling(output_image.clone());
+	namedWindow("circle recognized");
+	imshow("circle recognized", output_image);
 
 	return output_image;
 }
@@ -231,7 +261,7 @@ Mat image_circle_recognition(Mat input_image) {
 int main(int argc, char* argv[]) {
 	cout << "inizio programma" << endl;
 
-	// declaration image container
+	// declaration image containers
 	Mat img, filtering_result, color_result, shape_result;
 
 	// read image
@@ -260,13 +290,13 @@ int main(int argc, char* argv[]) {
 	namedWindow("image", CV_WINDOW_AUTOSIZE);
 	namedWindow("filtering_result", CV_WINDOW_AUTOSIZE);
 	namedWindow("color_result", CV_WINDOW_AUTOSIZE);
-	namedWindow("shape_result", CV_WINDOW_AUTOSIZE);
+//	namedWindow("shape_result", CV_WINDOW_AUTOSIZE);
 
 	// show images in the windows
 	imshow("image", img);
 	imshow("filtering_result", filtering_result);
 	imshow("color_result", color_result);
-	imshow("shape_result", color_result);
+	imshow("shape_result", shape_result);
 	waitKey(0);
 	destroyAllWindows();
 
