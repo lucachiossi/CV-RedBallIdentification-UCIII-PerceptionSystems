@@ -1,7 +1,6 @@
 #include "opencv\cv.hpp"
 #include <iostream>
 #include "MeanShift.h"
-#include "PearsonCorrelation.h"
 
 using namespace cv;
 using namespace std;
@@ -90,14 +89,15 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
 
 	// DETECTING CIRCUMFERENCE
 	double radious = 0;
-	double radious_sum = 0;
 	// Signature
 	vector<double> circle_reference;
 	vector<double> object_signature;
 	for (int i = 0; i < contour.size(); i++) {
 		double distance = sqrt(pow((centre.x - contour[i].x), 2) + pow((centre.y - contour[i].y), 2));
 
-		radious_sum = radious_sum + distance;
+		if (distance > radious) {
+			radious = distance;
+		}
 
 		circle_reference.push_back(10);
 		object_signature.push_back(distance);
@@ -105,40 +105,21 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats) {
 	}
 
 	// Correlation with Circle's signature
-	double circumference_threshold = 0.8;
+	double circumference_threshold = 10;
+	double correlation = 0;
 
-	double corr = pearsoncoeff(object_signature, circle_reference);
-	corr = sqrt(pow(corr,2));
-
-	cout << "correlation: " << corr << endl;
-
-	if (corr < circumference_threshold) {
-		cout << "centre: " << centre << "didn't pass circumference correlation" << endl;
+	if (!(correlation < circumference_threshold)) {
 		return false;
 	}
 
 	// Radius too short -> probably it's a noise object
-	double radious_threshold = 7;
-	radious = radious_sum / contour.size();
-	cout << "my radious: " << radious << endl;
-	if (radious <= radious_threshold) {
-		cout << "centre: " << centre << "didn't pass radious lenght" << endl;
+	radious_threshold = 5;
+	if (radious <= radious) {
 		return false;
 	}
 
 	// DETECTING CIRCLE
 	// Area
-	double area_proportion = 0.8;
-	double my_area = contourArea(contour);
-	double area_expected = pow(radious,2) * 3.14159265358979323846;
-	cout << "my area: " << my_area << endl;
-	cout << "area expected: " << area_expected << endl;
-	cout << "my_area/area_expected: " << my_area / area_expected << endl;
-
-	if (my_area/area_expected < 0.8) {
-		cout << "centre: " << centre << "didn't pass area proportion" << endl;
-		return false;
-	}
 
 	return true;
 }
