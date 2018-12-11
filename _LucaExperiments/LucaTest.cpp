@@ -3,6 +3,8 @@
 #include "MeanShift.h"
 #include "PearsonCorrelation.h"
 
+#define ESCAPE 27
+
 using namespace cv;
 using namespace std;
 
@@ -107,15 +109,18 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 		cout << "signature: " << object_signature[i] << endl;
 	}
 
-	// Correlation with Circle's signature
+	// Variance with Circle's signature
 	double circumference_threshold = 0.8;
 
-	double corr = pearsoncoeff(object_signature, circle_reference);
-	corr = sqrt(pow(corr,2));
+	double radious_avarage = radious_sum / contour.size();
+	double radious_variance = 0;
+	for (int i = 0; i < object_signature.size(); i++) {
+		radious_variance = radious_variance + sqrt(pow((radious_avarage - object_signature[i]) / object_signature.size(), 2));
+	}
 
-	cout << "correlation: " << corr << endl;
+	cout << "variance: " << radious_variance << endl;
 
-	if (corr < circumference_threshold) {
+	if (radious_variance < circumference_threshold) {
 		cout << "centre: " << centre << "didn't pass circumference correlation" << endl;
 		return false;
 	}
@@ -195,8 +200,8 @@ Mat object_detecting_labelling(Mat input_image, Mat to_label_image) {
 	return to_label_image;
 }
 
-// take an image and apply some filters in order to have better processing results
-// both input and output images are in BGR colour space
+/// take an image and apply some filters in order to have better processing results
+/// both input and output images are in BGR colour space
 Mat image_pre_filtering(Mat input_image) {
 	Mat output_image = input_image;
 
@@ -229,9 +234,9 @@ Mat image_pre_filtering(Mat input_image) {
 	return output_image;
 }
 
-// take an image and select only objects of the colour in the range we are interested in
-// the input image must be in GBR colour space
-// the output image will be returned as GBR colour space
+/// take an image and select only objects of the colour in the range we are interested in
+/// the input image must be in GBR colour space
+/// the output image will be returned as GBR colour space
 Mat red_color_filtering(Mat input_image) {
 
 	Mat output_image;
@@ -248,28 +253,29 @@ Mat red_color_filtering(Mat input_image) {
 	Scalar lower_red_hue_range1 = Scalar(0, 100, 100);
 	Scalar upper_red_hue_range1 = Scalar(10, 255, 255);
 	inRange(output_image, lower_red_hue_range1, upper_red_hue_range1, mask1);
-//	namedWindow("mask1", CV_WINDOW_AUTOSIZE);
-//	imshow("mask1", mask1);
+	namedWindow("mask1", CV_WINDOW_AUTOSIZE);
+	imshow("mask1", mask1);
 
 	// mask2
 	Mat mask2;
 	Scalar lower_red_hue_range2 = Scalar(170, 100, 100);
 	Scalar upper_red_hue_range2 = Scalar(180, 255, 255);
 	inRange(output_image, lower_red_hue_range2, upper_red_hue_range2, mask2);
-//	namedWindow("mask2", CV_WINDOW_AUTOSIZE);
-//	imshow("mask2", mask1);
+	namedWindow("mask2", CV_WINDOW_AUTOSIZE);
+	imshow("mask2", mask1);
 
 	// combined mask - because red values in HSV space are in 2 different ranges
 	Mat combined_mask;
 	addWeighted(mask1, 1.0, mask2, 1.0, 0.0, combined_mask);
-//	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
-//	imshow("combined_mask", combined_mask);
+	namedWindow("combined_mask", CV_WINDOW_AUTOSIZE);
+	imshow("combined_mask", combined_mask);
 
 	output_image = combined_mask;
 	return output_image;
 }
 
-// this function take as input an image and recognise circles inside it
+/// this function take as input an image and an image we want to print detected circles
+/// it cheks if there are circles 
 Mat image_circle_recognition(Mat input_image, Mat to_label_image) {
 	Mat output_image = input_image;
 
@@ -291,48 +297,92 @@ Mat image_circle_recognition(Mat input_image, Mat to_label_image) {
 	return to_label_image;
 }
 
-int main(int argc, char* argv[]) {
-	cout << "inizio programma" << endl;
-
-	// declaration image containers
-	Mat img, filtering_result, color_result, shape_result;
-
-	// read image
-	img = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset3.jpg", CV_LOAD_IMAGE_COLOR);
-
-	// check reading result
-	if (!img.data) {
-		cout << "errore lettura immagine mandril.jpg" << endl;
-		getchar();
-		return -1;
-	}
+/// this functions defines the different steps of processing in order to achiev our goal
+Mat operation_sequence(Mat input_image) {
+	Mat  filtering_result, color_result, shape_result;
 
 	// PRE-FILTERING
 	cout << "pre filtering..." << endl;
-	filtering_result = image_pre_filtering(img.clone());
+	filtering_result = image_pre_filtering(input_image.clone());
+	if (!filtering_result.data) {
+		cout << "errore prefiltering" << endl;
+		getchar();
+		exit(-1);
+	}
+	namedWindow("filtering_result", CV_WINDOW_AUTOSIZE);
+	imshow("filtering_result", filtering_result);
 
 	// RECOGNITION OF RED OBJECTS
 	cout << "red objects detection..." << endl;
 	color_result = red_color_filtering(filtering_result.clone());
+	if (!color_result.data) {
+		cout << "errore lettura color detection" << endl;
+		getchar();
+		exit(-1);
+	}
+	namedWindow("color_result", CV_WINDOW_AUTOSIZE);
+	imshow("color_result", color_result);
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
 	cout << "circle object recognition..." << endl;
 	shape_result = image_circle_recognition(color_result.clone(), filtering_result.clone());
-
-	// creation of windows to show the images
-	namedWindow("image", CV_WINDOW_AUTOSIZE);
-	namedWindow("filtering_result", CV_WINDOW_AUTOSIZE);
-	namedWindow("color_result", CV_WINDOW_AUTOSIZE);
-//	namedWindow("shape_result", CV_WINDOW_AUTOSIZE);
-
-	// show images in the windows
-	imshow("image", img);
-	imshow("filtering_result", filtering_result);
-	imshow("color_result", color_result);
+	if (!shape_result.data) {
+		cout << "errore lettura shape detection" << endl;
+		getchar();
+		exit(-1);
+	}
+	namedWindow("shape_result", CV_WINDOW_AUTOSIZE);
 	imshow("shape_result", shape_result);
 	waitKey(0);
 	destroyAllWindows();
 
+	return shape_result;
+}
+
+int main(int argc, char* argv[]) {
+	cout << "inizio programma" << endl;
+
+	// declaration image containers
+	Mat img_input, img_output;
+
+	// TESTS FROM IMAGES
+	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset3.jpg", CV_LOAD_IMAGE_COLOR);
+	// check reading result
+	if (!img_input.data) {
+		cout << "errore lettura immagine" << endl;
+		getchar();
+		return -1;
+	}
+	namedWindow("image", CV_WINDOW_AUTOSIZE);
+	imshow("image", img_input);
+
+	img_output = operation_sequence(img_input);
+
+	namedWindow("img_output", CV_WINDOW_AUTOSIZE);
+	imshow("img_output", img_output);
+	waitKey(0);
+	destroyAllWindows();
+
+	//// TESTS FROM CAMERA
+	//VideoCapture capture(0);
+	//if (!capture.isOpened()) {
+	//	cout << "error in VideoCapture, check device!" << endl;
+	//}
+	//// keyboard pressed
+	//char keypressed = 0;
+	//// check the success for image reading
+	//bool success;
+	//namedWindow("image", CV_WINDOW_AUTOSIZE);
+	//while (keypressed != ESCAPE) {
+	//	success = capture.read(img);
+	//	if (success == false) {
+	//		cout << "cannot read the frame from file" << endl;
+	//		return 1;
+	//	}
+	//	imshow("image", img);
+	//	keypressed = waitKey(24);
+	//}
+
 	cout << "fine programma" << endl;
-	getchar();
+	waitKey(0);
 }
