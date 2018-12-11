@@ -122,16 +122,16 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 //	cout << "variance: " << radious_variance << endl;
 
 	if (radious_variance > circumference_threshold) {
-//		cout << "centre: " << centre << "didn't pass variance correlation" << endl;
+		cout << "centre: " << centre << "didn't pass variance correlation" << endl;
 		return false;
 	}
 
-	// Radius too short -> probably it's a noise object
-	double radious_threshold = 1;
-	radious = radious_sum / contour.size();
-//	cout << "my radious: " << radious << endl;
-	if (radious <= radious_threshold) {
-//		cout << "centre: " << centre << "didn't pass radious lenght" << endl;
+	// Radius too short -> we consider it as a noise object
+	// we will not be able to recognise very small circles
+	double radious_threshold = 15;
+//	cout << "my radious: " << radious_avarage << endl;
+	if (radious_avarage <= radious_threshold) {
+		cout << "centre: " << centre << "didn't pass radious lenght" << endl;
 		return false;
 	}
 
@@ -139,13 +139,13 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 	// Area
 	double area_proportion = 0.8;
 	double my_area = contourArea(contour);
-	double area_expected = pow(radious,2) * 3.14159265358979323846;
-//	cout << "my area: " << my_area << endl;
-//	cout << "area expected: " << area_expected << endl;
-//	cout << "area_expected/ my_area: " << area_expected / my_area << endl;
+	double area_expected = pow(*max_radious,2) * 3.14159265358979323846;
+	cout << "my area: " << my_area << endl;
+	cout << "area expected: " << area_expected << endl;
+	cout << "my_area / area_expected: " << my_area / area_expected << endl;
 
-	if (area_expected / my_area < 0.8) {
-//		cout << "centre: " << centre << "didn't pass area proportion" << endl;
+	if (my_area / area_expected < 0.8) {
+		cout << "centre: " << centre << "didn't pass area proportion" << endl;
 		return false;
 	}
 
@@ -216,8 +216,8 @@ Mat image_pre_filtering(Mat input_image) {
 	// reduce dimension
 //	cout << "-> resizing image" << endl;
 
-//	Size size(1000, 750);
-//	resize(output_image, output_image, size);//resize image
+	Size size(1000, 750);
+	resize(output_image, output_image, size);//resize image
 //	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
 //	imshow("cropped_img", output_image);
 
@@ -353,8 +353,7 @@ int main(int argc, char* argv[]) {
 	Mat img_input, img_output;
 
 	// TESTS FROM IMAGES
-/*
-	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset3.jpg", CV_LOAD_IMAGE_COLOR);
+	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset1.jpg", CV_LOAD_IMAGE_COLOR);
 	// check reading result
 	if (!img_input.data) {
 		cout << "errore lettura immagine" << endl;
@@ -370,33 +369,33 @@ int main(int argc, char* argv[]) {
 	imshow("img_output", img_output);
 	waitKey(0);
 	destroyAllWindows();
-*/
+
 
 	// TESTS FROM CAMERA
-	namedWindow("image input", CV_WINDOW_AUTOSIZE);
-	namedWindow("image output", CV_WINDOW_AUTOSIZE);
-	VideoCapture capture(0);
-	if (!capture.isOpened()) {
-		cout << "error in VideoCapture, check device!" << endl;
-	}
-	// keyboard pressed
-	char keypressed = 0;
-	// check the success for image reading
-	bool success;
-	while (keypressed != ESCAPE) {
-		success = capture.read(img_input);
-		if (success == false) {
-			cout << "cannot read the frame from file" << endl;
-			return 1;
-		}
+	//namedWindow("image input", CV_WINDOW_AUTOSIZE);
+	//namedWindow("image output", CV_WINDOW_AUTOSIZE);
+	//VideoCapture capture(0);
+	//if (!capture.isOpened()) {
+	//	cout << "error in VideoCapture, check device!" << endl;
+	//}
+	//// keyboard pressed
+	//char keypressed = 0;
+	//// check the success for image reading
+	//bool success;
+	//while (keypressed != ESCAPE) {
+	//	success = capture.read(img_input);
+	//	if (success == false) {
+	//		cout << "cannot read the frame from file" << endl;
+	//		return 1;
+	//	}
 
-		imshow("image input", img_input);
+	//	imshow("image input", img_input);
 
-		img_output = operation_sequence(img_input);
-		imshow("image output", img_output);
+	//	img_output = operation_sequence(img_input);
+	//	imshow("image output", img_output);
 
-		keypressed = waitKey(2);
-	}
+	//	keypressed = waitKey(2);
+	//}
 
 	cout << "fine programma" << endl;
 	waitKey(0);
