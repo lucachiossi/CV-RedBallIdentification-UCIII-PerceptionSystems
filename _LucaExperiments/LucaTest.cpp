@@ -110,21 +110,64 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 //		cout << "signature: " << object_signature[i] << endl;
 	}
 
-	// Variance with Circle's signature
-	double circumference_threshold = 5;
-
 	double radious_avarage = radious_sum / contour.size();
-	double radious_variance = 0;
+
+
+
+
+
+	// mean absolute error
+	double error_threshold1 = 0.075;
+	
+	int error_points1 = 0;
+	float ratio_threshold1 = 0.3;
+
+	double error_term1 = 0;
 	for (int i = 0; i < object_signature.size(); i++) {
-		radious_variance = radious_variance + sqrt(pow((radious_avarage - object_signature[i]) / object_signature.size(), 2));
+
+		error_term1 = abs((radious_avarage - object_signature[i])/radious_avarage);
+//		cout << "error_term1: " << error_term1 << endl;
+		if (error_term1 > error_threshold1) {
+			error_points1++;
+		}
 	}
+	cout << "error_points1: " << error_points1 << endl;
 
-//	cout << "variance: " << radious_variance << endl;
+	float ratio1 = (float)error_points1 / (float)object_signature.size();
+	cout << "ratio1: " << ratio1 << endl;
 
-	if (radious_variance > circumference_threshold) {
-		cout << "centre: " << centre << "didn't pass variance correlation" << endl;
+	if (ratio1 > ratio_threshold1) {
+		cout << "ratio: " << ratio1 << " didn't pass as too many error points" << endl;
 		return false;
 	}
+
+	// mean square error
+/*	double error_threshold2 = 0.005625;
+
+	int error_points2 = 0;
+	float ratio_threshold2 = 0.3;
+
+	double error_term2 = 0;
+	for (int i = 0; i < object_signature.size(); i++) {
+
+		error_term2 = pow(abs((radious_avarage - object_signature[i])/ radious_avarage), 2);
+		cout << "error_term2: " << error_term2 << endl;
+
+		if (error_term2 > error_threshold2) {
+		error_points2++;
+		}
+	}
+	cout << "error_points2: " << error_points2 << endl;
+
+	float ratio2 = (float)error_points2 / (float)object_signature.size();
+	cout << "ratio2: " << ratio2 << endl;
+
+	if (ratio2 > ratio_threshold2) {
+		cout << "ratio: " << ratio2 << " didn't pass as too many error points" << endl;
+		return false;
+	} */
+
+
 
 	// Radius too short -> we consider it as a noise object
 	// we will not be able to recognise very small circles
@@ -144,7 +187,7 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 	cout << "area expected: " << area_expected << endl;
 	cout << "my_area / area_expected: " << my_area / area_expected << endl;
 
-	if (my_area / area_expected < 0.8) {
+	if (my_area / area_expected < 0.6) {
 		cout << "centre: " << centre << "didn't pass area proportion" << endl;
 		return false;
 	}
@@ -353,7 +396,7 @@ int main(int argc, char* argv[]) {
 	Mat img_input, img_output;
 
 	// TESTS FROM IMAGES
-	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset1.jpg", CV_LOAD_IMAGE_COLOR);
+	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset6.jpg", CV_LOAD_IMAGE_COLOR);
 	// check reading result
 	if (!img_input.data) {
 		cout << "errore lettura immagine" << endl;
