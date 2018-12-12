@@ -120,7 +120,7 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 	double error_threshold1 = 0.075;
 	
 	int error_points1 = 0;
-	float ratio_threshold1 = 0.3;
+	float ratio_threshold1 = 0.4;
 
 	double error_term1 = 0;
 	for (int i = 0; i < object_signature.size(); i++) {
@@ -131,7 +131,7 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 			error_points1++;
 		}
 	}
-	cout << "error_points1: " << error_points1 << endl;
+//	cout << "error_points1: " << error_points1 << endl;
 
 	float ratio1 = (float)error_points1 / (float)object_signature.size();
 	cout << "ratio1: " << ratio1 << endl;
@@ -180,14 +180,14 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 
 	// DETECTING CIRCLE
 	// Area
-	double area_proportion = 0.8;
+	double area_proportion = 0.6;
 	double my_area = contourArea(contour);
 	double area_expected = pow(*max_radious,2) * 3.14159265358979323846;
-	cout << "my area: " << my_area << endl;
-	cout << "area expected: " << area_expected << endl;
-	cout << "my_area / area_expected: " << my_area / area_expected << endl;
+//	cout << "my area: " << my_area << endl;
+//	cout << "area expected: " << area_expected << endl;
+//	cout << "my_area / area_expected: " << my_area / area_expected << endl;
 
-	if (my_area / area_expected < 0.6) {
+	if (my_area / area_expected < area_proportion) {
 		cout << "centre: " << centre << "didn't pass area proportion" << endl;
 		return false;
 	}
@@ -234,13 +234,14 @@ Mat object_detecting_labelling(Mat input_image, Mat to_label_image) {
 //		cout << "centro: " << labels.at<int>(centre) << endl;
 //		cout << "index: " << contours.size() - i << endl;
 //		cout << "contorno: " << labels.at<int>(contour[0]);
+		int radious = 0;
 		if (labels.at<int>(centre) != labels.at<int>(contour[0])) {
 			cout << "ERRORE CENTRO E CONTORNO NON CORRISPONDONO" << endl;
-			waitKey(0);
-			exit(-1);
+//			cout << "centro nel punto: " << centre << endl;
+//			waitKey(0);
+//			exit(-1);
 		}
-		int radious = 0;
-		if (circle_detection(contour, centre, stats.row(i), &radious)) {
+		else if (circle_detection(contour, centre, stats.row(i), &radious)) {
 			cout << "-> labelling circle" << endl;
 			// bound object
 			Scalar color(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
@@ -260,7 +261,7 @@ Mat image_pre_filtering(Mat input_image) {
 //	cout << "-> resizing image" << endl;
 
 	Size size(1000, 750);
-	resize(output_image, output_image, size);//resize image
+//	resize(output_image, output_image, size);//resize image
 //	namedWindow("cropped_img", CV_WINDOW_AUTOSIZE);
 //	imshow("cropped_img", output_image);
 
@@ -396,49 +397,49 @@ int main(int argc, char* argv[]) {
 	Mat img_input, img_output;
 
 	// TESTS FROM IMAGES
-	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset6.jpg", CV_LOAD_IMAGE_COLOR);
-	// check reading result
-	if (!img_input.data) {
-		cout << "errore lettura immagine" << endl;
-		getchar();
-		return -1;
-	}
-//	namedWindow("image", CV_WINDOW_AUTOSIZE);
-//	imshow("image", img_input);
-
-	img_output = operation_sequence(img_input);
-
-	namedWindow("img_output", CV_WINDOW_AUTOSIZE);
-	imshow("img_output", img_output);
-	waitKey(0);
-	destroyAllWindows();
+//	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset6.jpg", CV_LOAD_IMAGE_COLOR);
+//	// check reading result
+//	if (!img_input.data) {
+//		cout << "errore lettura immagine" << endl;
+//		getchar();
+//		return -1;
+//	}
+////	namedWindow("image", CV_WINDOW_AUTOSIZE);
+////	imshow("image", img_input);
+//
+//	img_output = operation_sequence(img_input);
+//
+//	namedWindow("img_output", CV_WINDOW_AUTOSIZE);
+//	imshow("img_output", img_output);
+//	waitKey(0);
+//	destroyAllWindows();
 
 
 	// TESTS FROM CAMERA
-	//namedWindow("image input", CV_WINDOW_AUTOSIZE);
-	//namedWindow("image output", CV_WINDOW_AUTOSIZE);
-	//VideoCapture capture(0);
-	//if (!capture.isOpened()) {
-	//	cout << "error in VideoCapture, check device!" << endl;
-	//}
-	//// keyboard pressed
-	//char keypressed = 0;
-	//// check the success for image reading
-	//bool success;
-	//while (keypressed != ESCAPE) {
-	//	success = capture.read(img_input);
-	//	if (success == false) {
-	//		cout << "cannot read the frame from file" << endl;
-	//		return 1;
-	//	}
+	namedWindow("image input", CV_WINDOW_AUTOSIZE);
+	namedWindow("image output", CV_WINDOW_AUTOSIZE);
+	VideoCapture capture(0);
+	if (!capture.isOpened()) {
+		cout << "error in VideoCapture, check device!" << endl;
+	}
+	// keyboard pressed
+	char keypressed = 0;
+	// check the success for image reading
+	bool success;
+	while (keypressed != ESCAPE) {
+		success = capture.read(img_input);
+		if (success == false) {
+			cout << "cannot read the frame from file" << endl;
+			return 1;
+		}
 
-	//	imshow("image input", img_input);
+		imshow("image input", img_input);
 
-	//	img_output = operation_sequence(img_input);
-	//	imshow("image output", img_output);
+		img_output = operation_sequence(img_input);
+		imshow("image output", img_output);
 
-	//	keypressed = waitKey(2);
-	//}
+		keypressed = waitKey(2);
+	}
 
 	cout << "fine programma" << endl;
 	waitKey(0);
