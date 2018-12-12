@@ -275,6 +275,7 @@ Mat image_pre_filtering(Mat input_image) {
 	GaussianBlur(output_image, output_image, Size(3, 3), sigma_x, sigma_y);
 //	namedWindow("noise_reducted", CV_WINDOW_AUTOSIZE);
 //	imshow("noise_reducted", output_image);
+	
 
 	// segmentation - application of meanshift algorithm
 	/*cout << "-> mean shift segmentation" << endl;
@@ -339,6 +340,7 @@ Mat image_circle_recognition(Mat input_image, Mat output_image) {
 	circle_detecting_image = mophological_transformation_application(circle_detecting_image.clone());
 	namedWindow("morphological transformation");
 	imshow("morphological transformation", circle_detecting_image);
+//	imwrite("C:/Users/lucac_000/Desktop/morphological.jpg", circle_detecting_image);
 
 	// objects detectios and labelling
 //	cout << "-> labelling objects" << endl;
@@ -375,6 +377,7 @@ Mat operation_sequence(Mat input_image) {
 	}
 //	namedWindow("color_result", CV_WINDOW_AUTOSIZE);
 //	imshow("color_result", color_result);
+//	imwrite("C:/Users/lucac_000/Desktop/color.jpg", color_result);
 
 	// RECOGNITION OF CIRCLE SHAPED OBJECTS
 //	cout << "circle object recognition..." << endl;
@@ -397,7 +400,7 @@ int main(int argc, char* argv[]) {
 	Mat img_input, img_output;
 
 	// TESTS FROM IMAGES
-//	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset6.jpg", CV_LOAD_IMAGE_COLOR);
+//	img_input = imread("C:/Users/lucac_000/source/repos/RedBallRecognising/ImagesDataset/my_dataset2.jpg", CV_LOAD_IMAGE_COLOR);
 //	// check reading result
 //	if (!img_input.data) {
 //		cout << "errore lettura immagine" << endl;
@@ -406,11 +409,13 @@ int main(int argc, char* argv[]) {
 //	}
 ////	namedWindow("image", CV_WINDOW_AUTOSIZE);
 ////	imshow("image", img_input);
+////	imwrite("C:/Users/lucac_000/Desktop/input.jpg", img_input);
 //
 //	img_output = operation_sequence(img_input);
 //
 //	namedWindow("img_output", CV_WINDOW_AUTOSIZE);
 //	imshow("img_output", img_output);
+////	imwrite("C:/Users/lucac_000/Desktop/output.jpg", img_output);
 //	waitKey(0);
 //	destroyAllWindows();
 
