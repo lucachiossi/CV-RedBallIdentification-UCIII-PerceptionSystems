@@ -54,6 +54,17 @@ Mat mophological_transformation_application(Mat input_image) {
 	// doing this we are supposing to work in a certain environment where the red ball will
 	// not be farer than a certain distance
 	
+	
+
+	// deleting noise inside
+	int noise_inside_reduction_iteration = 3;
+	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
+		dilate(output_image, output_image, kernel);
+	}
+	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
+		erode(output_image, output_image, kernel);
+	}
+
 	// deleting noise outside
 	int noise_outside_reduction_iteration = 3;
 	for (int i = 0; i < noise_outside_reduction_iteration; i++) {
@@ -61,15 +72,6 @@ Mat mophological_transformation_application(Mat input_image) {
 	}
 	for (int i = 0; i < noise_outside_reduction_iteration; i++) {
 		dilate(output_image, output_image, kernel);
-	}
-
-	// deleting noise inside
-	int noise_inside_reduction_iteration = 5;
-	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
-		dilate(output_image, output_image, kernel);
-	}
-	for (int i = 0; i < noise_inside_reduction_iteration; i++) {
-		erode(output_image, output_image, kernel);
 	}
 
 	return output_image;
@@ -185,7 +187,7 @@ bool circle_detection(vector<Point> contour, Point centre, Mat stats, int* max_r
 	double area_expected = pow(*max_radious,2) * 3.14159265358979323846;
 //	cout << "my area: " << my_area << endl;
 //	cout << "area expected: " << area_expected << endl;
-//	cout << "my_area / area_expected: " << my_area / area_expected << endl;
+	cout << "my_area / area_expected: " << my_area / area_expected << endl;
 
 	if (my_area / area_expected < area_proportion) {
 		cout << "centre: " << centre << "didn't pass area proportion" << endl;
@@ -421,7 +423,7 @@ int main(int argc, char* argv[]) {
 
 
 	// TESTS FROM CAMERA
-	namedWindow("image input", CV_WINDOW_AUTOSIZE);
+//	namedWindow("image input", CV_WINDOW_AUTOSIZE);
 	namedWindow("image output", CV_WINDOW_AUTOSIZE);
 	VideoCapture capture(0);
 	if (!capture.isOpened()) {
@@ -438,7 +440,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 
-		imshow("image input", img_input);
+//		imshow("image input", img_input);
 
 		img_output = operation_sequence(img_input);
 		imshow("image output", img_output);
